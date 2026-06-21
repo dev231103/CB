@@ -1,69 +1,149 @@
 import hashlib
-import datetime
+import json
 
-# List to store all transactions (Transaction Pool)
+def display_transaction(transaction):
+   #for transaction in transactions:
+   dict = transaction.to_dict()
+   print ("sender: " + dict['sender'])
+   print ('-----')
+   print ("recipient: " + dict['recipient'])
+   print ('-----')
+   print ("value: " + str(dict['value']))
+   print ('-----')
+   print ("time: " + str(dict['time']))
+   print ('-----')
+
 transactions = []
 
-# Function to generate unique transaction ID using SHA-256
-def generate_transaction_id(sender, receiver, amount, timestamp):
-    data = f"{sender}|{receiver}|{amount}|{timestamp}"
-    return hashlib.sha256(data.encode()).hexdigest()
+Dinesh = Client("Dinesh")
+Ramesh = Client("Ramesh")
+Seema = Client("Seema")
+Vijay = Client("Vijay")
 
-# Input number of transactions
-n = int(input("Enter the number of transactions: "))
+t1 = Transaction(
+   Dinesh,
+   Ramesh.identity,
+   15.0
+)
 
-# Create multiple transactions
-for i in range(n):
-    print(f"\nEnter details for Transaction {i + 1}")
+t1.sign_transaction()
+transactions.append(t1)
 
-    sender = input("Enter sender name: ").strip()
-    receiver = input("Enter receiver name: ").strip()
+t2 = Transaction(
+   Dinesh,
+   Seema.identity,
+   6.0
+)
+t2.sign_transaction()
+transactions.append(t2)
+t3 = Transaction(
+   Ramesh,
+   Vijay.identity,
+   2.0
+)
+t3.sign_transaction()
+transactions.append(t3)
+t4 = Transaction(
+   Seema,
+   Ramesh.identity,
+   4.0
+)
+t4.sign_transaction()
+transactions.append(t4)
+t5 = Transaction(
+   Vijay,
+   Seema.identity,
+   7.0
+)
+t5.sign_transaction()
+transactions.append(t5)
+t6 = Transaction(
+   Ramesh,
+   Seema.identity,
+   3.0
+)
+t6.sign_transaction()
+transactions.append(t6)
+t7 = Transaction(
+   Seema,
+   Dinesh.identity,
+   8.0
+)
+t7.sign_transaction()
+transactions.append(t7)
+t8 = Transaction(
+   Seema,
+   Ramesh.identity,
+   1.0
+)
+t8.sign_transaction()
+transactions.append(t8)
+t9 = Transaction(
+   Vijay,
+   Dinesh.identity,
+   5.0
+)
+t9.sign_transaction()
+transactions.append(t9)
+t10 = Transaction(
+   Vijay,
+   Ramesh.identity,
+   3.0
+)
+t10.sign_transaction()
+transactions.append(t10)
 
-    # Amount validation
-    while True:
-        amount = float(input("Enter amount: "))
-        if amount > 0:
-            break
-        else:
-            print("Amount must be greater than 0. Please re-enter.")
+for transaction in transactions:
+   display_transaction (transaction)
+   print ('--------------')
 
-    # Generate timestamp
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+class Block:
+   def __init__(self):
+      self.verified_transactions = []
+      self.previous_block_hash = ""
+      self.Nonce = ""
 
-    # Generate unique transaction ID
-    tx_id = generate_transaction_id(sender, receiver, amount, timestamp)
+   def compute_hash(self):
+      block_data = {
+          "transactions": [t.to_dict() for t in self.verified_transactions],
+          "previous_hash": self.previous_block_hash,
+          "nonce": self.Nonce
+      }
+      encoded = json.dumps(block_data).encode()
+      return hashlib.sha256(encoded).hexdigest()
 
-    # Store transaction details in dictionary
-    transaction = {
-        "tx_id": tx_id,
-        "sender": sender,
-        "receiver": receiver,
-        "amount": amount,
-        "timestamp": timestamp,
-        "status": "Pending"
-    }
+last_block_hash = ""
 
-    # Add transaction to transaction pool
-    transactions.append(transaction)
+Dinesh = Client("Dinesh") # Re-instantiating Dinesh with a name
 
-# Display transactions in organized format
-print("\n==================== TRANSACTION POOL ====================")
-print("{:<5} {:<15} {:<15} {:<10} {:<20} {:<10}".format(
-    "No.", "Sender", "Receiver", "Amount", "Timestamp", "Status"
-))
-print("-" * 85)
+t0 = Transaction (
+   "Genesis",
+   Dinesh.identity,
+   500.0
+)
 
-for i, tx in enumerate(transactions, start=1):
-    print("{:<5} {:<15} {:<15} {:<10.2f} {:<20} {:<10}".format(
-        i,
-        tx["sender"],
-        tx["receiver"],
-        tx["amount"],
-        tx["timestamp"],
-        tx["status"]
-    ))
+block0 = Block()
 
-# Display transaction IDs
-print("\n==================== TRANSACTION IDs ====================")
-for i, tx in enumerate(transactions, start=1):
-    print(f"Transaction {i} ID: {tx['tx_id']}")
+block0.previous_block_hash = "0"
+block0.Nonce = 0
+
+block0.verified_transactions.append (t0)
+
+digest = block0.compute_hash()
+print("Block Hash:", digest)
+last_block_hash = digest
+
+TPCoins = []
+
+def dump_blockchain(blockchain):
+   print("Number of blocks in the chain:", len(blockchain))
+   for x in range(len(blockchain)):
+      block_temp = blockchain[x]
+      print("block #", x)
+      for transaction in block_temp.verified_transactions:
+         display_transaction(transaction)
+         print('--------------')
+      print('=====================================')
+
+TPCoins.append (block0)
+dump_blockchain(TPCoins)
