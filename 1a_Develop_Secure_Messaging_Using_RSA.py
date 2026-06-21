@@ -1,104 +1,79 @@
+# !pip install pycryptodome
+# pip install pycryptodome
+
+import hashlib
+import random
+import string
+import json
 import binascii
+import numpy as np
+import pandas as pd
+import pylab as pl
+import logging
+import datetime
+import collections
+
 import Crypto
 import Crypto.Random
+from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Signature import PKCS1_v1_5
-from Crypto.Hash import SHA256
 
-# Define Client class
+
 class Client:
-    def __init__(self, name):
-        self.name = name
 
-        # Generate secure random bytes
-        rand_func = Crypto.Random.new().read
-
-        # Generate RSA private key (2048 bits for better security)
-        self._private_key = RSA.generate(2048, rand_func)
-
-        # Generate corresponding public key
+    def __init__(self):
+        random_gen = Crypto.Random.new().read
+        self._private_key = RSA.generate(1024, random_gen)
         self._public_key = self._private_key.publickey()
-
-        # Create signer object
         self._signer = PKCS1_v1_5.new(self._private_key)
 
     @property
     def identity(self):
-        # Return public key in hexadecimal format
         return binascii.hexlify(
-            self._public_key.exportKey(format='DER')
+            self._private_key.exportKey(format='DER')
         ).decode('ascii')
 
-    @property
-    def public_key(self):
-        return self._public_key
 
-    @property
-    def private_key(self):
-        return self._private_key
+class Transaction:
 
-    # Sign a message
-    def sign_message(self, message):
-        h = SHA256.new(message.encode('utf-8'))
-        signature = self._signer.sign(h)
-        return signature
+    def __init__(self, sender, recipient, value):
+        self.sender = sender
+        self.recipient = recipient
+        self.value = value
+        self.time = datetime.datetime.now()
 
+    def to_dict(self):
+        if self.sender == "Genesis":
+            identity = "Genesis"
+        else:
+            identity = self.sender.identity
 
-# Function to encrypt message using receiver's public key
-def encrypt_message(message, receiver_public_key):
-    cipher = PKCS1_OAEP.new(receiver_public_key)
-    encrypted = cipher.encrypt(message.encode('utf-8'))
-    return encrypted
+        return collections.OrderedDict({
+            'sender': identity,
+            'recipient': self.recipient,
+            'value': self.value,
+            'time': str(self.time)
+        })
 
-
-# Function to decrypt message using receiver's private key
-def decrypt_message(encrypted_message, receiver_private_key):
-    cipher = PKCS1_OAEP.new(receiver_private_key)
-    decrypted = cipher.decrypt(encrypted_message)
-    return decrypted.decode('utf-8')
-
-
-# Function to verify sender's signature
-def verify_signature(message, signature, sender_public_key):
-    h = SHA256.new(message.encode('utf-8'))
-    verifier = PKCS1_v1_5.new(sender_public_key)
-    return verifier.verify(h, signature)
+    def sign_transaction(self):
+        private_key = self.sender._private_key
+        signer = PKCS1_v1_5.new(private_key)
+        h = SHA.new(str(self.to_dict()).encode('utf8'))
+        return binascii.hexlify(
+            signer.sign(h)
+        ).decode('ascii')
 
 
-# Create two clients
-sender = Client("Alice")
-receiver = Client("Bob")
+# Create clients
+Dinesh = Client()
+Ramesh = Client()
 
-# Display client identities
-print("Sender Name:", sender.name)
-print("Sender Identity (Public Key):", sender.identity)
+# Create transaction
+t = Transaction(Dinesh, Ramesh.identity, 5.0)
 
-print("\nReceiver Name:", receiver.name)
-print("Receiver Identity (Public Key):", receiver.identity)
+# Sign transaction
+signature = t.sign_transaction()
 
-# Input message from sender
-message = input("\nEnter message to send securely: ")
-
-# Encrypt message with receiver's public key
-encrypted_message = encrypt_message(message, receiver.public_key)
-
-# Sign message with sender's private key
-signature = sender.sign_message(message)
-
-# Decrypt message with receiver's private key
-decrypted_message = decrypt_message(encrypted_message, receiver.private_key)
-
-# Verify sender's signature using sender's public key
-is_verified = verify_signature(decrypted_message, signature, sender.public_key)
-
-# Display results
-print("\n--- Secure Message Exchange ---")
-print("Original Message:", message)
-print("Encrypted Message:", encrypted_message)
-print("Decrypted Message:", decrypted_message)
-
-if is_verified:
-    print("Signature Verification: Successful (Message is authentic)")
-else:
-    print("Signature Verification: Failed (Message may be tampered)")
+print("Signature:")
+print(signature)
