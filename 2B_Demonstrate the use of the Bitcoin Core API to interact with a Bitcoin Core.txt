@@ -1,0 +1,132 @@
+* Install Bitcoin Core API: https://bitcoin.org/en/download
+
+* Open the app and Allow all necessary permissions
+
+* In the top menu go to settings -> Options -> Enable RPC server
+
+* In the same options window Select 'Open Configuration File' & open it using notepad
+Add the following configurations to that file and save the file:
+
+server=1
+rpcuser=admin
+rpcpassword=admin1234
+regtest=1
+
+
+* Now in options click OK
+
+
+* Locate the folder where bitcoin is installed and copy the path: C:\Program Files\Bitcoin\daemon
+
+* Open Command Prompt and type
+
+	cd C:\Program Files\Bitcoin\daemon
+
+* Now start the node in regtest mode using command:
+bitcoind -regtest
+
+
+
+Open another tab in the command prompt or open another command prompt while keeping the current one running in the background and type
+
+ 	cd C:\Program Files\Bitcoin\daemon
+
+
+* Check Blockchain Status <The output indicates whether bitcoin is active>
+bitcoin-cli -regtest getblockchaininfo
+
+
+* Create a wallet:
+
+bitcoin-cli -regtest createwallet "student_wallet"
+
+
+* Generate Wallet Address:
+bitcoin-cli -regtest -rpcwallet=student_wallet getnewaddress
+
+and copy the generated address
+
+
+
+* Check wallet Balance:
+bitcoin-cli -regtest -rpcwallet=student_wallet getbalance
+
+
+* Now open Vscode or Python IDLE and write code and save the file:
+
+---------------------------------------------------------------------------
+import requests
+import json
+from base64 import b64encode
+
+rpc_user = "admin"
+rpc_password = "admin1234"
+rpc_url = "http://127.0.0.1:18443/"
+
+credentials = b64encode(
+    f"{rpc_user}:{rpc_password}".encode()
+).decode("utf-8")
+
+headers = {
+    "Content-type": "application/json",
+    "Authorization": f"Basic {credentials}"
+}
+
+def call_rpc(method, params=[]):
+    payload = json.dumps({
+        "jsonrpc": "1.0",
+        "id": "python-client",
+        "method": method,
+        "params": params
+    })
+
+    response = requests.post(
+        rpc_url,
+        headers=headers,
+        data=payload
+    )
+
+    return response.json()
+
+print("Blockchain Info:", call_rpc("getblockchaininfo"))
+print("Create Wallet:", call_rpc("createwallet", ["student_wallet_NEW"]))
+print("New Address:", call_rpc("getnewaddress"))
+print("Get Balance:", call_rpc("getbalance"))
+print("List Transactions:", call_rpc("listtransactions"))
+
+---------------------------------------------------------------------------------
+
+* Open Vscode terminal and install the required libraries:
+
+pip install requests
+
+* Now run the python code
+
+python 2b.py
+
+
+* Verify Wallet Creation: 
+go to this path in windows explorer
+
+C:\Users\<Username>\AppData\Local\Bitcoin
+
+and now u can view the wallet in the regtest folder
+
+
+-------------------------The End----------------------------
+
+
+* Read these steps if and only if the python program fails to run
+
+* close the command prompt and open a fresh command prompt and type
+
+cd C:\Program Files\Bitcoin\daemon
+bitcoind -regtest
+
+
+* Now run the python code again
+
+_________________________          _________________________________
+
+
+

@@ -1,0 +1,76 @@
+*  Open Windows powershell as admin run command
+	Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+*  Install geth: 
+
+choco install geth --version=1.10.20
+
+*  Create a project folder named "2d" having this structure:
+	Create a file called 'genesis.json'
+	Create a folder inside 2d named 'data'
+	
+*  Paste the following code in genesis.json
+{
+  "config": {
+    "chainId": 1234,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "berlinBlock": 0,
+    "londonBlock": 0,
+    "terminalTotalDifficulty": 0,
+    "terminalTotalDifficultyPassed": true
+  },
+  "difficulty": "0",
+  "gasLimit": "30000000",
+  "alloc": {}
+}
+
+
+
+* Search for environment variables in windows and add the following path to the Path Variable of System variables:
+
+C:\Program Files\Geth
+
+
+* Now open the 2d folder in command prompt using its path example: 
+	
+	cd C:\2d 
+
+	geth version
+
+* Initialize the blockchain
+	geth --datadir data init genesis.json
+
+
+* Start geth
+
+	geth --datadir data --networkid 1234 --http --http.api eth,net,web3,miner,admin,personal --allow-insecure-unlock console 
+
+
+* Check Existing accounts
+	eth.accounts
+
+* Create new account
+	personal.newAccount("1234")
+
+* Unlock Ethereum account
+	personal.unlockAccount(eth.accounts[0],"1234",0)
+
+* Set Miner Account
+	miner.setEtherbase(eth.accounts[0])
+
+
+* Start Mining 
+	miner.start(1)
+
+* Verify Block creation
+	eth.blockNumber
+
+* Check Miner Reward(Balance)
+	web3.fromWei(eth.getBalance(eth.accounts[0]), "ether")
