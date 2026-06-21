@@ -1,80 +1,129 @@
-import hashlib
 import datetime
+import hashlib
+import json
 
-# Initial account balances
-accounts = {
-    "Alice": 1000.0,
-    "Bob": 800.0,
-    "Charlie": 500.0
-}
 
+# -------------------- Client --------------------
+class Client:
+    def __init__(self, name):
+        self.name = name
+        self.identity = name
+
+    def __str__(self):
+        return self.name
+
+
+# -------------------- Transaction --------------------
 class Transaction:
-    def __init__(self, sender, receiver, amount):
+    def __init__(self, sender, recipient_identity, value):
         self.sender = sender
-        self.receiver = receiver
-        self.amount = amount
-        self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.tx_id = self.generate_transaction_id()
-        self.status = "Pending"
+        self.recipient = recipient_identity
+        self.value = value
+        self.time = datetime.datetime.now()
 
-    # Generate unique transaction ID using SHA-256
-    def generate_transaction_id(self):
-        data = f"{self.sender}|{self.receiver}|{self.amount}|{self.timestamp}"
-        return hashlib.sha256(data.encode()).hexdigest()
+    def sign_transaction(self):
+        # Placeholder (no real crypto yet)
+        pass
 
-    # Transfer money from sender to receiver
-    def transfer(self):
-        if self.sender not in accounts:
-            self.status = "Failed - Sender not found"
-            print("\nTransaction Failed: Sender account does not exist.")
-            return
-
-        if self.receiver not in accounts:
-            self.status = "Failed - Receiver not found"
-            print("\nTransaction Failed: Receiver account does not exist.")
-            return
-
-        if self.amount <= 0:
-            self.status = "Failed - Invalid amount"
-            print("\nTransaction Failed: Amount must be greater than zero.")
-            return
-
-        if accounts[self.sender] >= self.amount:
-            accounts[self.sender] -= self.amount
-            accounts[self.receiver] += self.amount
-            self.status = "Success"
-            print("\nTransaction Successful!")
-            print(f"{self.amount} transferred from {self.sender} to {self.receiver}.")
-        else:
-            self.status = "Failed - Insufficient balance"
-            print("\nTransaction Failed: Insufficient balance.")
-
-    # Display transaction details
-    def display_transaction(self):
-        print("\n================ TRANSACTION DETAILS ================")
-        print("Transaction ID :", self.tx_id)
-        print("Sender         :", self.sender)
-        print("Receiver       :", self.receiver)
-        print("Amount         :", self.amount)
-        print("Timestamp      :", self.timestamp)
-        print("Status         :", self.status)
+    def to_dict(self):
+        return {
+            'sender': str(self.sender),
+            'recipient': str(self.recipient),
+            'value': self.value,
+            'time': str(self.time)
+        }
 
 
-# Input transaction details
-sender = input("Enter sender name: ").strip()
-receiver = input("Enter receiver name: ").strip()
-amount = float(input("Enter amount to transfer: "))
+# -------------------- Display Function --------------------
+def display_transaction(transaction):
+    d = transaction.to_dict()
+    print("sender:", d['sender'])
+    print("recipient:", d['recipient'])
+    print("value:", d['value'])
+    print("time:", d['time'])
+    print('-----')
 
-# Create transaction object
-tx1 = Transaction(sender, receiver, amount)
 
-# Perform transfer
-tx1.transfer()
+# -------------------- Create Clients --------------------
+Dinesh = Client("Dinesh")
+Ramesh = Client("Ramesh")
+Seema = Client("Seema")
+Vijay = Client("Vijay")
 
-# Display transaction details
-tx1.display_transaction()
 
-# Display updated balances
-print("\n================ UPDATED ACCOUNT BALANCES ================")
-for user, balance in accounts.items():
-    print(f"{user}: {balance:.2f}")
+# -------------------- Transactions --------------------
+transactions = []
+
+t1 = Transaction(Dinesh, Ramesh.identity, 15.0)
+t2 = Transaction(Dinesh, Seema.identity, 6.0)
+t3 = Transaction(Ramesh, Vijay.identity, 2.0)
+t4 = Transaction(Seema, Ramesh.identity, 4.0)
+t5 = Transaction(Vijay, Seema.identity, 7.0)
+t6 = Transaction(Ramesh, Seema.identity, 3.0)
+t7 = Transaction(Seema, Dinesh.identity, 8.0)
+t8 = Transaction(Seema, Ramesh.identity, 1.0)
+t9 = Transaction(Vijay, Dinesh.identity, 5.0)
+t10 = Transaction(Vijay, Ramesh.identity, 3.0)
+
+# Sign and store
+for t in [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]:
+    t.sign_transaction()
+    transactions.append(t)
+
+
+# -------------------- Display Transactions --------------------
+for transaction in transactions:
+    display_transaction(transaction)
+    print('------------------')
+
+
+# -------------------- Block --------------------
+class Block:
+    def __init__(self):
+        self.verified_transactions = []
+        self.previous_block_hash = ""
+        self.Nonce = ""
+
+    def compute_hash(self):
+        block_data = {
+            "transactions": [t.to_dict() for t in self.verified_transactions],
+            "previous_hash": self.previous_block_hash,
+            "nonce": self.Nonce
+        }
+        encoded = json.dumps(block_data).encode()
+        return hashlib.sha256(encoded).hexdigest()
+
+
+# -------------------- Genesis Block --------------------
+TPCoins = []
+
+t0 = Transaction("Genesis", Dinesh.identity, 500.0)
+
+block0 = Block()
+block0.previous_block_hash = "0"
+block0.Nonce = 0
+
+block0.verified_transactions.append(t0)
+
+# Compute hash
+last_block_hash = block0.compute_hash()
+
+TPCoins.append(block0)
+
+
+# -------------------- Blockchain Display --------------------
+def dump_blockchain(chain):
+    print("\nNumber of blocks in the chain:", len(chain))
+    for i, block in enumerate(chain):
+        print("\nBlock #", i)
+        print("Previous Hash:", block.previous_block_hash)
+        print("Nonce:", block.Nonce)
+
+        for transaction in block.verified_transactions:
+            display_transaction(transaction)
+
+    print('=====================================')
+
+
+# -------------------- Show Blockchain --------------------
+dump_blockchain(TPCoins)
