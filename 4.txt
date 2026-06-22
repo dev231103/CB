@@ -1,0 +1,107 @@
+* Compile the Program File using Solidity Compiler version 0.8.34 or later.
+
+* Select Remix VM (Cancun) environment and deploy the MyNFT contract using Account 1.
+
+* From the deployed contract section, call the mintNFT function. Copy the address of Account 1 from the Accounts dropdown and paste it into the recipient field. Click Transact.
+
+Input:
+mintNFT(Account1)
+
+Output:
+tokenId = 1
+
+* Verify the NFT details.
+
+Call:
+tokenCount()
+
+Output:
+1
+
+Call:
+name()
+
+Output:
+MyNFT
+
+Call:
+symbol()
+
+Output:
+MNFT
+
+* Verify ownership.
+
+Call:
+ownerOf(1)
+
+Output:
+Account 1 Address
+
+* Check balance.
+
+Call:
+balanceOf(Account1)
+
+Output:
+1
+
+* Transfer NFT from Account 1 to Account 2.
+
+Call:
+safeTransferFrom
+
+Parameters:
+from = Account1 Address
+to = Account2 Address
+tokenId = 1
+
+Click Transact.
+
+* Verify ownership after transfer.
+
+Call:
+ownerOf(1)
+
+Output:
+Account 2 Address
+
+* From the Accounts dropdown select Account 2.
+
+* Approve Account 1 to manage Token ID 1.
+
+Call:
+approve
+
+Parameters:
+to = Account1 Address
+tokenId = 1
+
+Click Transact.
+
+* Verify approval.
+
+Call:
+getApproved(1)
+
+Output:
+Account1 Address
+
+* Check ERC721 interface support.
+
+Call:
+supportsInterface
+
+Input:
+0x80ac58cd
+
+Output:
+true
+
+* Enter an incorrect interface ID.
+
+Input:
+0x12345678
+
+Output:
+false
