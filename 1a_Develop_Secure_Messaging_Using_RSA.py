@@ -1,79 +1,75 @@
-# !pip install pycryptodome
-# pip install pycryptodome
-
-import hashlib
-import random
-import string
-import json
-import binascii
-import numpy as np
-import pandas as pd
-import pylab as pl
-import logging
-import datetime
-import collections
-
-import Crypto
-import Crypto.Random
-from Crypto.Hash import SHA
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
+import base64
 
 
-class Client:
-
-    def __init__(self):
-        random_gen = Crypto.Random.new().read
-        self._private_key = RSA.generate(1024, random_gen)
-        self._public_key = self._private_key.publickey()
-        self._signer = PKCS1_v1_5.new(self._private_key)
-
-    @property
-    def identity(self):
-        return binascii.hexlify(
-            self._private_key.exportKey(format='DER')
-        ).decode('ascii')
+# Function to generate RSA key pairs
+def generate_rsa_key_pair():
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048
+    )
+    public_key = private_key.public_key()
+    return private_key, public_key
 
 
-class Transaction:
+# Function to serialize keys
+def serialize_keys(private_key, public_key):
+    priv_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
 
-    def __init__(self, sender, recipient, value):
-        self.sender = sender
-        self.recipient = recipient
-        self.value = value
-        self.time = datetime.datetime.now()
+    pub_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
 
-    def to_dict(self):
-        if self.sender == "Genesis":
-            identity = "Genesis"
-        else:
-            identity = self.sender.identity
-
-        return collections.OrderedDict({
-            'sender': identity,
-            'recipient': self.recipient,
-            'value': self.value,
-            'time': str(self.time)
-        })
-
-    def sign_transaction(self):
-        private_key = self.sender._private_key
-        signer = PKCS1_v1_5.new(private_key)
-        h = SHA.new(str(self.to_dict()).encode('utf8'))
-        return binascii.hexlify(
-            signer.sign(h)
-        ).decode('ascii')
+    return priv_pem, pub_pem
 
 
-# Create clients
-Dinesh = Client()
-Ramesh = Client()
+# Encrypt a message using public key
+def encrypt_message(public_key, message):
+    encrypted = public_key.encrypt(
+        message.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
 
-# Create transaction
-t = Transaction(Dinesh, Ramesh.identity, 5.0)
+    return base64.b64encode(encrypted).decode()
 
-# Sign transaction
-signature = t.sign_transaction()
 
-print("Signature:")
-print(signature)
+# Decrypt a message using private key
+def decrypt_message(private_key, encrypted_message):
+    decrypted = private_key.decrypt(
+        base64.b64decode(encrypted_message),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+
+    return decrypted.decode()
+
+
+# Simulating two users: Alice and Bob
+print("Generating RSA key pairs for Alice and Bob...")
+
+alice_private, alice_public = generate_rsa_key_pair()
+bob_private, bob_public = generate_rsa_key_pair()
+
+# Alice sends a message to Bob
+message_from_alice = "Hi Bob, this is Alice. The message is secure!"
+print("\nOriginal message from Alice:", message_from_alice)
+
+encrypted_message = encrypt_message(bob_public, message_from_alice)
+print("Encrypted message (sent to Bob):", encrypted_message)
+
+# Bob decrypts the message
+decrypted_message = decrypt_message(bob_private, encrypted_message)
+print("Decrypted message by Bob:", decrypted_message)
