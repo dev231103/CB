@@ -10,27 +10,24 @@ choco install geth --version=1.10.20
 	Create a folder inside 2d named 'data'
 	
 *  Paste the following code in genesis.json
-{
-  "config": {
-    "chainId": 1234,
-    "homesteadBlock": 0,
-    "eip150Block": 0,
-    "eip155Block": 0,
-    "eip158Block": 0,
-    "byzantiumBlock": 0,
-    "constantinopleBlock": 0,
-    "petersburgBlock": 0,
-    "istanbulBlock": 0,
-    "berlinBlock": 0,
-    "londonBlock": 0,
-    "terminalTotalDifficulty": 0,
-    "terminalTotalDifficultyPassed": true
-  },
-  "difficulty": "0",
-  "gasLimit": "30000000",
-  "alloc": {}
-}
-
+    {
+    "config": {
+        "chainId": 1234,
+        "homesteadBlock": 0,
+        "eip150Block": 0,
+        "eip155Block": 0,
+        "eip158Block": 0,
+        "byzantiumBlock": 0,
+        "constantinopleBlock": 0,
+        "petersburgBlock": 0,
+        "istanbulBlock": 0,
+        "berlinBlock": 0,
+        "londonBlock": 0
+    },
+    "difficulty": "1",
+    "gasLimit": "8000000",
+    "alloc": {}
+    }
 
 
 * Search for environment variables in windows and add the following path to the Path Variable of System variables:
